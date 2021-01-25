@@ -73,7 +73,7 @@ get_cmc_price <- function(id = NULL, time_start = '2018-01-01', time_end = Sys.D
   if (!is.numeric(id)) id <- get_cmc_id(toupper(id))
   if (length(id) > 1) stop("Error: More than one id found for symbol.  Please use numberic id instead.")
 
-  url <- paste0("https://web-api.coinmarketcap.com/v1/cryptocurrency/ohlcv/historical?id=", id, "&convert=USD&time_start='", "'&time_end='", time_end, "'")
+  url <- paste0("https://web-api.coinmarketcap.com/v1/cryptocurrency/ohlcv/historical?id=", id, "&convert=USD&time_start='", time_start, "'&time_end='", time_end, "'")
   j <- jsonlite::read_json(url)
   rawdata <- rbindlist(j$data$quotes)
   data <- rbindlist(rawdata$quote)
@@ -86,3 +86,6 @@ get_cmc_price <- function(id = NULL, time_start = '2018-01-01', time_end = Sys.D
 
 # .map <- fread(file = "/Users/rogerbos/data/map.csv")
 # save(.map, file = "/Users/rogerbos/R_HOME/cryptor/data/map.RData")
+
+# x <- sample(1000)
+# usethis::use_data(.map, internal = TRUE)
