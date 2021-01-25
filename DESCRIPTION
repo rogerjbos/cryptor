@@ -1,0 +1,15 @@
+Package: cryptor
+Type: Package
+Title: Download crypto prices from CoinMarketCap using their web api
+Version: 0.0.1
+Author: Roger J. Bos, CFA
+Maintainer: Roger J. Bos, CFA <me@rogerjbos.com>
+Description: Download crypto prices from CoinMarketCap using their web api.
+    Also provides functions to look up symbols and ids for crypto's of interest.
+License: GPL-3
+Encoding: UTF-8
+LazyData: true
+Depends: data.table
+URL: https://github.com/rogerjbos/cryptor
+Copyright: (c) 2021
+RoxygenNote: 7.1.1
