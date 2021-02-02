@@ -238,41 +238,5 @@ if (FALSE) {
   get_kraken("OpenPositions", txid = '')
   get_kraken("AddOrder", pair = 'DOTUSD', type = 'buy', ordertype = 'limit', price = 10,  volume = .1)
 
-  'OpenPositions' = { url <- 'https://api.kraken.com/0/private/OpenPositions'
-  params <- paste0('&txid=', txid) },
-
-
-}
-
-if (FALSE) {
-
-  library(httr)
-  url <- "https://wallet-api.staging.celsius.network/wallet/transactions?page=2&per_page=3"
-  r <- GET(url, add_headers("X-Cel-Partner-Token: " ,"X-Cel-User-Token: 44a88547-1f1a-43ab-ad02-31f21446a63e"))
-  stop_for_status(r)
-  content(r, "parsed", "application/json")
-
-
-
-
-
-  # url <- 'https://api.kraken.com/0/private/Ledgers'
-  # param <- '&ofs=50'
-  # URI_path <- gsub("^.*?kraken.com","", url)
-  # nonce <- as.character(as.numeric(Sys.time()) * 1e6)
-  # post_data <- paste0('nonce=', nonce, param)
-  # # Calculate the SHA256 of the nonce and the POST data.
-  # dig <- digest(object = paste0(nonce, post_data), algo = 'sha256', serialize = FALSE, raw = TRUE)
-  # message <- c(charToRaw(URI_path), dig)
-  # # Decode the API secret (the private part of the API key) from base64
-  # key_decode <- base64decode(secret, what='raw')
-  # # Calculate the HMAC of the URI path and the SHA256, using SHA512 as the HMAC hash and the decoded API secret as the HMAC key.
-  # sign <- hmac(key = key_decode, object = message, algo = 'sha512', raw = TRUE)
-  # # Encode the HMAC into base64.
-  # httpheader <- c('API-Key' = key, 'API-Sign' = base64encode(sign))
-  # curl_msg <- RCurl::getCurlHandle(useragent = paste("cryptor", packageVersion("cryptor")))
-  # # curl
-  # query_result_json <- try(RCurl::getURLContent(curl = curl_msg, url = url, postfields = post_data, httpheader = httpheader))
-  # query_result_json
 
 }
