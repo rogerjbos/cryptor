@@ -1,5 +1,5 @@
 #### cryptor package
-R package to download crypto prices into R from the [CoinMarketCap](https://coinmarketcap.com/) web api
+R package to interface with Kraken's API and download crypto prices into R from the [CoinMarketCap](https://coinmarketcap.com/) web api
 
 #### Install the cryptor package from GitHub:
 ```
@@ -79,5 +79,42 @@ get_cmc_name("terra")
 Who knew `Terra` was such a popular crypto name.  For `Terra LUNA` we want id `4172`.
 
 The mapping table with the CoinMarketCap id's will need to be updated periodically, so if you are looking for a brand new crypto, you may have to go to their website to find the necessary id, otherwise trying updating the package.
+
+
+# Kraken API functions
+
+Most of the Kraken API methods are implemnented, both public and private, including ledger, trading history, balances, add order, and cancel order.  For the private methods, you will need API keys which you can set up by logging into [Kraken.com](https://www.kraken.com) and choosing API under Security.  Select which functions you want the API key to have access to, but for your safety, do not select deposit or withdrawal.  Once you have your API keys, define then as follows.
+
+```
+kraken_api_key <- "keykeykeykeykeykeykeykeykeykeykeykeykeykeykeykeykeykeyke"
+kraken_private_key <- "secretsecretsecretsecretsecretsecretsecretsecretsecretsecretsecretsecretsecretsecretsecr"
+```
+
+Then you can try the following examples.  Please see [Kraken's full documentation](https://www.kraken.com/en-us/features/api) for more information on the functions and parameters.
+
+```
+  library(digest)
+  library(caTools)
+  library(cryptor)
+
+  get_kraken("Ticker", pair = "DOTUSD")
+  get_kraken("Trades", pair = "DOTUSD")
+  get_kraken("Depth", pair = "DOTUSD")
+  get_kraken("OHLC", pair = "DOTUSD")
+  get_kraken("Spread", pair = "DOTUSD")
+  get_kraken("AssetPairs", pair = "DOTUSD")
+  get_kraken("Assets")
+  get_kraken("Time")
+  get_kraken("Balance")
+  get_kraken("Ledgers", since = '2021-01-21', enddate = '2021-01-22', ofs = 1)
+  get_kraken("CancelOrder", txid = 'OAMBZD-FWRTN-G63URX')
+  get_kraken("CancelAll")
+  get_kraken("CancelAllOrdersAfter")
+  get_kraken("ClosedOrders")
+  get_kraken("TradesHistory")
+  get_kraken("TradeVolume", pair="DOTUSD,KEEPUSD")
+  get_kraken("AddOrder", pair = 'DOTUSD', type = 'buy', ordertype = 'limit', price = 10,  volume = 1)
+  get_kraken("OpenOrders")
+```
 
 That's all the package does for now.  I will try to add more functionality later as need cases come up.  I hope this helps you.  Please star the github page if you find this package useful.

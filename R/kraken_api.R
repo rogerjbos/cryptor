@@ -1,28 +1,16 @@
-library(digest)
-library(caTools)
-
-# Please see https://support.kraken.com/hc/en-us/articles/360029054811-What-is-the-authentication-algorithm-for-private-endpoints-
-# URI path = URL of API call without 'https://api.kraken.com'.
-# nonce = A unique identifier which must increase in value with each API call (often a UNIX timestamp, which is the current time in seconds (or milliseconds for higher resolution) since January 1st 1970).
-# POST data = Form encoded name/value pairs of the nonce and the API method parameters.
-#
-# Examples of the variables for a call to the TradeBalance method are as follows
-# (note that all of the values are string values regardless of what the values represent):
-#
-#   URI path = "/0/private/TradeBalance"
-# nonce = "1540973848000"
-# POST data = "nonce=1540973848000&asset=xxbt"
-# Algorithm
-#
-# Calculate the SHA256 of the nonce and the POST data.
-# Decode the API secret (the private part of the API key) from base64.
-# Calculate the HMAC of the URI path and the SHA256, using SHA512 as the HMAC hash and the decoded API secret as the HMAC key.
-# Encode the HMAC into base64.
-# An example of the algorithm using the variables shown above is as follows:
-#
-#   Base64Encode(HMAC-SHA512 of ("/0/private/TradeBalance" + SHA256("1540973848000nonce=1540973848000&asset=xxbt")) using Base64Decode("FRs+gtq09rR7OFtKj9BGhyOGS3u5vtY/EdiIBO9kD8NFtRX7w7LeJDSrX6cq1D8zmQmGkWFjksuhBvKOAWJohQ==") as the HMAC key
-# Helper function called by get_kraken
-get_kraken_url <- function(url, key = NULL, secret = NULL) {
+#' Helper function called by get_kraken
+#'
+#' @name get_kraken_url
+#' @title get_kraken_url
+#' @encoding UTF-8
+#' @concept Helper function called by get_kraken
+#'
+#' @return data.table with mapping
+#'
+#' Please see https://support.kraken.com/hc/en-us/articles/360029054811-What-is-the-authentication-algorithm-for-private-endpoints-
+#'
+#' @author Roger J. Bos, CFA, \email{me@rogerjbos.com}
+get_kraken_url <- function(url, params = NULL, key = NULL, secret = NULL) {
 
   if (is.null(key)) key <- kraken_api_key
   if (is.null(secret)) secret <- kraken_private_key
@@ -33,48 +21,96 @@ get_kraken_url <- function(url, key = NULL, secret = NULL) {
     return(out$result)
 
   } else if (grepl("*?/private/", url)) {
+
     URI_path <- gsub("^.*?kraken.com","", url)
     nonce <- as.character(as.numeric(Sys.time()) * 1e6)
-    post_data <- paste0('nonce=',nonce)
-    sign <- hmac(key = base64decode(secret,what='raw'),
-     object = c(charToRaw(URI_path),
-       digest(object = paste0(nonce, post_data), algo = 'sha256', serialize = FALSE, raw = TRUE)),
-     algo = 'sha512', raw = TRUE)
+    post_data <- ifelse(is.null(params), paste0('nonce=', nonce), paste0('nonce=', nonce, params))
+    # Calculate the SHA256 of the nonce and the POST data.
+    dig <- digest(object = paste0(nonce, post_data), algo = 'sha256', serialize = FALSE, raw = TRUE)
+    message <- c(charToRaw(URI_path), dig)
+    # Decode the API secret (the private part of the API key) from base64
+    key_decode <- base64decode(secret, what='raw')
+    # Calculate the HMAC of the URI path and the SHA256, using SHA512 as the HMAC hash and the decoded API secret as the HMAC key.
+    sign <- hmac(key = key_decode, object = message, algo = 'sha512', raw = TRUE)
+    # Encode the HMAC into base64.
     httpheader <- c('API-Key' = key, 'API-Sign' = base64encode(sign))
     curl_msg <- RCurl::getCurlHandle(useragent = paste("cryptor", packageVersion("cryptor")))
-    query_result_json <- rawToChar(RCurl::getURLContent(curl = curl_msg, url = url, binary = TRUE,
-      postfields = post_data, httpheader = httpheader))
+    # curl
+    query_result_json <- RCurl::getURLContent(curl = curl_msg, url = url, postfields = post_data, httpheader = httpheader)
     out <- jsonlite::fromJSON(query_result_json)
+    print(out$error)
     return(out$result)
+
   } else {
     stop("Error: Incorrect Kraken URL!")
   }
-
 }
 
-get_kraken <- function(method, pair = '', since = 0, interval = 1, info = "info", count = 20, start = '2021-01-01', end = Sys.Date(), ...) {
+#' Helper function called by get_kraken
+#'
+#' @name get_kraken
+#' @title get_kraken
+#' @encoding UTF-8
+#' @concept Helper function called by get_kraken
+#' @param method string one of ("Ticker","Trades","Depth","OHLC","Spread","AssetPairs","Assets","Time","Balance","Ledgers","OpenOrders","AddOrder","CalcelOrder","CalcelAll")
+#' @param pair string currency pair
+#' @param since numeric UNIX time for start of query
+#' @param interval numeric, default of 1
+#' @param count numeric how many observations to return, used for `Depth`
+#'
+#' @return data.table or json
+#'
+#' @author Roger J. Bos, CFA, \email{me@rogerjbos.com}
+#' #' @examples
+#' get_kraken("Ticker", pair = "DOTUSD")
+#' get_kraken("Trades", pair = "DOTUSD")
+#' get_kraken("Depth", pair = "DOTUSD")
+#' get_kraken("OHLC", pair = "DOTUSD")
+#' get_kraken("Spread", pair = "DOTUSD")
+#' get_kraken("AssetPairs", pair = "DOTUSD")
+#' get_kraken("Assets")
+#' get_kraken("Time")
+#' get_kraken("Balance")
+#' get_kraken("Ledgers")
+#' get_kraken("OpenOrders")
+#'
+#' @export
+get_kraken <- function(method, pair = '', since = '2020-01-01', interval = 1, info = "info", txid = '',
+                       asset = 'all', type = 'all', ofs = 1, enddate = Sys.Date(), timeout = 60,
+                       docalcs = 'true', consolidation = 'market', trades = '', ...) {
 
-
-  # method = "OHLC"; pair = 'LTCUSD'; count = 20; since = 0; interval = 1
   # Determine URL to send to Kraken api
   switch(method,
          'Ticker'      = { url <- paste0('https://api.kraken.com/0/public/Ticker?pair=', pair) },
-         'Trades'      = { url <- paste0('https://api.kraken.com/0/public/Trades?pair=', pair, '&', 'since=', since) },
+         'Trades'      = { url <- paste0('https://api.kraken.com/0/public/Trades?pair=', pair, '&', 'since=', as.numeric(as.POSIXct(since))) },
          'Depth'       = { url <- paste0('https://api.kraken.com/0/public/Depth?pair=', pair, '&count=', count) },
-         'OHLC'        = { url <- paste0('https://api.kraken.com/0/public/OHLC?pair=', pair, '&since=', since, '&interval=', interval) },
-         'Spread'      = { url <- paste0('https://api.kraken.com/0/public/Spread?pair=', pair, '&', 'since=', since)},
+         'OHLC'        = { url <- paste0('https://api.kraken.com/0/public/OHLC?pair=', pair, '&since=', as.numeric(as.POSIXct(since)), '&interval=', interval) },
+         'Spread'      = { url <- paste0('https://api.kraken.com/0/public/Spread?pair=', pair, '&since=', as.numeric(as.POSIXct(since)))},
          'AssetPairs'  = { url <- paste0('https://api.kraken.com/0/public/AssetPairs?info=', info, '&pair=', pair) },
-         'Ledgers'     = { url <- 'https://api.kraken.com/0/private/Ledgers' },
-         # 'Ledgers'     = { url <- paste0('https://api.kraken.com/0/private/Ledgers&start=', as.numeric(as.POSIXct(start)), '&end=', as.numeric(as.POSIXct(end))) },
-         # 'Ledgers'     = { url <- paste0('https://api.kraken.com/0/private/Ledgers&start=', as.POSIXct(start)) },
          'Assets'      = { url <- 'https://api.kraken.com/0/public/Assets' },
          'Time'        = { url <- 'https://api.kraken.com/0/public/Time' },
          'Balance'     = { url <- 'https://api.kraken.com/0/private/Balance' },
          'OpenOrders'  = { url <- 'https://api.kraken.com/0/private/OpenOrders' },
-         'CancelOrder' = { url <- 'https://api.kraken.com/0/private/CancelOrder' })
+         'CancelAll'   = { url <- 'https://api.kraken.com/0/private/CancelAll' },
+         'CancelOrder' = { url <- 'https://api.kraken.com/0/private/CancelOrder'
+                           params <- paste0('&txid=', txid) },
+         'TradeVolume' = { url <- 'https://api.kraken.com/0/private/TradeVolume'
+                           params <- paste0('&pair=', pair) },
+         'CancelAllOrdersAfter' = { url <- 'https://api.kraken.com/0/private/CancelAllOrdersAfter'
+                                    params <- paste0('&timeout=', timeout) },
+         'OpenPositions' = { url <- 'https://api.kraken.com/0/private/OpenPositions'
+                             params <- paste0('&txid=', txid, '&docalcs=', docalcs) },
+         'TradesHistory' = { url <- 'https://api.kraken.com/0/private/TradesHistory'
+                             params <- paste0('&asset=', asset, '&type=', type, '&start=', as.numeric(as.POSIXct(since)), '&end=', as.numeric(as.POSIXct(enddate)), '&ofs=', ofs) },
+         'ClosedOrders' = { url <- 'https://api.kraken.com/0/private/ClosedOrders'
+                            params <- paste0('&trades=', trades, '&start=', as.numeric(as.POSIXct(since)), '&end=', as.numeric(as.POSIXct(enddate)), '&ofs=', ofs) },
+         'Ledgers'     = { url <- 'https://api.kraken.com/0/private/Ledgers'
+                           params <- paste0('&asset=', asset, '&type=', type, '&start=', as.numeric(as.POSIXct(since)), '&end=', as.numeric(as.POSIXct(enddate)), '&ofs=', ofs) },
+         'AddOrder'    = { url <- 'https://api.kraken.com/0/private/AddOrder'
+                           params <- paste0('&pair=', pair, '&type=', type, '&ordertype=', ordertype, '&price=', price, '&volume=', volume) })
 
   # Call helper function
-  res <- get_kraken_url(url)
+  res <- get_kraken_url(url, params)
 
   # Convert json list to data.table
   if (method == "Ticker") {
@@ -83,14 +119,14 @@ get_kraken <- function(method, pair = '', since = 0, interval = 1, info = "info"
     tickers <- list()
     for (pair in pairs) {
       tickers[[pair]] <- data.table(query_time = Sys.time(), pair = pair,
-                                    open = as.numeric(res[[pair]][['o']][1]),
-                                    high = as.numeric(res[[pair]][['h']][1]),
-                                    low = as.numeric(res[[pair]][['l']][1]),
-                                    last = as.numeric(res[[pair]][['c']][1]),
-                                    vwap = as.numeric(res[[pair]][['p']][2]),
-                                    volume = as.numeric(res[[pair]][['v']][2]),
-                                    ask = as.numeric(res[[pair]][['a']][1]),
-                                    bid = as.numeric(res[[pair]][['b']][1]))
+        open = as.numeric(res[[pair]][['o']][1]),
+        high = as.numeric(res[[pair]][['h']][1]),
+        low = as.numeric(res[[pair]][['l']][1]),
+        last = as.numeric(res[[pair]][['c']][1]),
+        vwap = as.numeric(res[[pair]][['p']][2]),
+        volume = as.numeric(res[[pair]][['v']][2]),
+        ask = as.numeric(res[[pair]][['a']][1]),
+        bid = as.numeric(res[[pair]][['b']][1]))
     }
     out <- rbindlist(tickers)
 
@@ -135,7 +171,7 @@ get_kraken <- function(method, pair = '', since = 0, interval = 1, info = "info"
     out <- data.table(bid, ask)
     out <- out[, c('bid.time','bid.volume','bid.price','ask.price','ask.volume','ask.time')]
 
-  } else if (method == "Ledgers") {
+  } else if (method == "Ledgers" | method == "Ledgers2") {
 
     ids <- names(res[['ledger']])
     ledger <- list()
@@ -159,7 +195,7 @@ get_kraken <- function(method, pair = '', since = 0, interval = 1, info = "info"
     oids <- names(res[['open']])
     orders <- list()
     for (oid in oids) {
-      orders[[oid]] <- data.table(query_time = Sys.time(), order_id = oid,
+      orders[[oid]] <- data.table(order_id = oid,
         pair = res[['open']][[oid]][['descr']][['pair']],
         type = res[['open']][[oid]][['descr']][['type']],
         ordertype = res[['open']][[oid]][['descr']][['ordertype']],
@@ -176,53 +212,67 @@ get_kraken <- function(method, pair = '', since = 0, interval = 1, info = "info"
   return(out)
 }
 
+# Testing
 if (FALSE) {
+
+  library(digest)
+  library(caTools)
+  library(cryptor)
 
   get_kraken("Ticker", pair = "DOTUSD")
   get_kraken("Trades", pair = "DOTUSD")
   get_kraken("Depth", pair = "DOTUSD")
-  get_kraken("OHLC", pair = "DOTUSD") # ?
+  get_kraken("OHLC", pair = "DOTUSD")
   get_kraken("Spread", pair = "DOTUSD")
   get_kraken("AssetPairs", pair = "DOTUSD")
   get_kraken("Assets")
   get_kraken("Time")
   get_kraken("Balance")
-  get_kraken("OpenOrders")
+  get_kraken("Ledgers", since = '2021-01-21', enddate = '2021-01-22', ofs = 1)
+  get_kraken("CancelOrder", txid = 'OAMBZD-FWRTN-G63URX')
+  get_kraken("CancelAll")
+  get_kraken("CancelAllOrdersAfter")
+  get_kraken("ClosedOrders")
+  get_kraken("TradesHistory")
+  get_kraken("TradeVolume", pair="DOTUSD,KEEPUSD")
+  get_kraken("OpenPositions", txid = '')
+  get_kraken("AddOrder", pair = 'DOTUSD', type = 'buy', ordertype = 'limit', price = 10,  volume = .1)
+
+  'OpenPositions' = { url <- 'https://api.kraken.com/0/private/OpenPositions'
+  params <- paste0('&txid=', txid) },
+
 
 }
 
+if (FALSE) {
+
+  library(httr)
+  url <- "https://wallet-api.staging.celsius.network/wallet/transactions?page=2&per_page=3"
+  r <- GET(url, add_headers("X-Cel-Partner-Token: " ,"X-Cel-User-Token: 44a88547-1f1a-43ab-ad02-31f21446a63e"))
+  stop_for_status(r)
+  content(r, "parsed", "application/json")
 
 
 
 
-#' market.api.query(market = 'kraken',
-#'                  url = 'https://api.kraken.com/0/public/Ticker?pair=XXBTZEUR')
-#' market.api.query(market = 'kraken',
-#'                  url = 'https://api.kraken.com/0/private/Balance',
-#'                  key = '', secret = '')
-#' # order book
-#' market.api.query(market = 'kraken',
-#'                  url = 'https://api.kraken.com/0/public/Depth?pair=XXBTZEUR')
-#' # open orders
-#' market.api.query(market = 'kraken',
-#'                  url = 'https://api.kraken.com/0/private/OpenOrders',
-#'                  key = '', secret = '')
-#' # place order
-#' market.api.query(market = 'kraken',
-#'                  url = 'https://api.kraken.com/0/private/AddOrder',
-#'                  key = '', secret = '',
-#'                  req = list(pair = 'XXBTZEUR',
-#'                             type = 'sell',
-#'                             ordertype = 'limit',
-#'                             price = 1200, # 1200 eur
-#'                             volume = 0.1)) # 0.1 btc
-#' # cancel order
-#' market.api.query(market = 'kraken',
-#'                  url = 'https://api.kraken.com/0/private/CancelOrder',
-#'                  key = '', secret = '',
-#'                  req = list(txid = 'id_from_open_orders'))
-#' # trades
-#' market.api.query(market = 'kraken',
-#'                  url = 'https://api.kraken.com/0/public/Trades?pair=XXBTZEUR')
-#' }
 
+  # url <- 'https://api.kraken.com/0/private/Ledgers'
+  # param <- '&ofs=50'
+  # URI_path <- gsub("^.*?kraken.com","", url)
+  # nonce <- as.character(as.numeric(Sys.time()) * 1e6)
+  # post_data <- paste0('nonce=', nonce, param)
+  # # Calculate the SHA256 of the nonce and the POST data.
+  # dig <- digest(object = paste0(nonce, post_data), algo = 'sha256', serialize = FALSE, raw = TRUE)
+  # message <- c(charToRaw(URI_path), dig)
+  # # Decode the API secret (the private part of the API key) from base64
+  # key_decode <- base64decode(secret, what='raw')
+  # # Calculate the HMAC of the URI path and the SHA256, using SHA512 as the HMAC hash and the decoded API secret as the HMAC key.
+  # sign <- hmac(key = key_decode, object = message, algo = 'sha512', raw = TRUE)
+  # # Encode the HMAC into base64.
+  # httpheader <- c('API-Key' = key, 'API-Sign' = base64encode(sign))
+  # curl_msg <- RCurl::getCurlHandle(useragent = paste("cryptor", packageVersion("cryptor")))
+  # # curl
+  # query_result_json <- try(RCurl::getURLContent(curl = curl_msg, url = url, postfields = post_data, httpheader = httpheader))
+  # query_result_json
+
+}
