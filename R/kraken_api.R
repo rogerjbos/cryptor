@@ -171,22 +171,45 @@ get_kraken <- function(method, pair = '', since = '2020-01-01', interval = 1, in
     out <- data.table(bid, ask)
     out <- out[, c('bid.time','bid.volume','bid.price','ask.price','ask.volume','ask.time')]
 
-  } else if (method == "Ledgers" | method == "Ledgers2") {
+  } else if (method == 'TradesHistory') {
+
+    ids <- names(res[['trades']])
+    trades <- list()
+    for (id in ids) {
+      # id <- ids[1]
+      trades[[id]] <- data.table(id = id,
+                                 ordertxid = res[['trades']][[id]][['ordertxid']],
+                                 postxid = res[['trades']][[id]][['postxid']],
+                                 pair = res[['trades']][[id]][['pair']],
+                                 time = res[['trades']][[id]][['time']],
+                                 type = res[['trades']][[id]][['type']],
+                                 ordertype = res[['trades']][[id]][['ordertype']],
+                                 price = res[['trades']][[id]][['price']],
+                                 cost = res[['trades']][[id]][['cost']],
+                                 fee = res[['trades']][[id]][['fee']],
+                                 vol = res[['trades']][[id]][['vol']],
+                                 margin = res[['trades']][[id]][['margin']],
+                                 misc = res[['trades']][[id]][['misc']])
+    }
+    out <- rbindlist(trades)
+    out$time <- as.POSIXct(as.numeric(out$time), origin="1970-01-01", TZ='UTC')
+
+  } else if (method == "Ledgers") {
 
     ids <- names(res[['ledger']])
     ledger <- list()
     for (id in ids) {
       # id <- ids[1]
       ledger[[id]] <- data.table(id = id,
-        time = res[['ledger']][[id]][['time']],
-        type = res[['ledger']][[id]][['type']],
-        subtype = res[['ledger']][[id]][['subtype']],
-        aclass = res[['ledger']][[id]][['aclass']],
-        asset = res[['ledger']][[id]][['asset']],
-        amount = res[['ledger']][[id]][['amount']],
-        fee = res[['ledger']][[id]][['fee']],
-        balance = res[['ledger']][[id]][['balance']])
-    }
+       time = res[['ledger']][[id]][['time']],
+       type = res[['ledger']][[id]][['type']],
+       subtype = res[['ledger']][[id]][['subtype']],
+       aclass = res[['ledger']][[id]][['aclass']],
+       asset = res[['ledger']][[id]][['asset']],
+       amount = res[['ledger']][[id]][['amount']],
+       fee = res[['ledger']][[id]][['fee']],
+       balance = res[['ledger']][[id]][['balance']])
+  }
     out <- rbindlist(ledger)
     out$time <- as.POSIXct(as.numeric(out$time), origin="1970-01-01", TZ='UTC')
 
@@ -219,6 +242,8 @@ if (FALSE) {
   library(caTools)
   library(cryptor)
 
+
+
   get_kraken("Ticker", pair = "DOTUSD")
   get_kraken("Trades", pair = "DOTUSD")
   get_kraken("Depth", pair = "DOTUSD")
@@ -238,5 +263,8 @@ if (FALSE) {
   get_kraken("OpenPositions", txid = '')
   get_kraken("AddOrder", pair = 'DOTUSD', type = 'buy', ordertype = 'limit', price = 10,  volume = .1)
 
+
+  method = 'TradesHistory';
+  # params <- paste0('&asset=', asset, '&type=', type, '&start=', as.numeric(as.POSIXct(since)), '&end=', as.numeric(as.POSIXct(enddate)), '&ofs=', ofs) },
 
 }
