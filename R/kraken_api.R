@@ -258,7 +258,7 @@ if (FALSE) {
   get_kraken("CancelAll")
   get_kraken("CancelAllOrdersAfter")
   get_kraken("ClosedOrders")
-  get_kraken("TradesHistory")
+  get_kraken("TradesHistory", since = '2021-01-21', enddate = '2021-01-22', ofs = 1)
   get_kraken("TradeVolume", pair="DOTUSD,KEEPUSD")
   get_kraken("OpenPositions", txid = '')
   get_kraken("AddOrder", pair = 'DOTUSD', type = 'buy', ordertype = 'limit', price = 10,  volume = .1)
