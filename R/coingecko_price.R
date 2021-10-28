@@ -29,12 +29,13 @@ get_coingecko_map <- function() .map
 #'
 #' @author Roger J. Bos, CFA, \email{me@rogerjbos.com}
 #' @export
-get_coingecko_name <- function(txt) .map[grep(txt, .map$Name, ignore.case = TRUE)]
+# get_coingecko_name <- function(txt) .map[grep(txt, .map$Name, ignore.case = TRUE)]
+get_coingecko_name <- function(txt) .map[grep(txt, Name, ignore.case = TRUE)]
 
-#' Function to get CoinMarketCap id based on a crypto symbol
+#' Function to get CoinGecko id based on a crypto symbol
 #'
-#' @name get_cmc_id
-#' @title get_cmc_id
+#' @name get_coingecko_id_from_symbol
+#' @title get_coingecko_id_from_symbol
 #' @encoding UTF-8
 #' @concept Lookup corresponding id to use to download prices for the correct crypto
 #'
@@ -43,11 +44,14 @@ get_coingecko_name <- function(txt) .map[grep(txt, .map$Name, ignore.case = TRUE
 #' @return numberic id
 #'
 #' @examples
-#' get_coingecko_id("luna")
+#' get_coingecko_id_from_symbol("luna")
+#' get_coingecko_id_from_symbol("LUNA")
 #'
 #' @author Roger J. Bos, CFA, \email{me@rogerjbos.com}
 #' @export
-get_coingecko_id <- function(tag) .map[.map$Symbol == tolower(tag),]
+get_coingecko_id_from_symbol <- function(tag) .map[Symbol == tolower(tag)]
+
+get_coingecko_verify_id <- function(tag) nrow(.map[Id == tolower(tag)])==1
 
 #' Get prices from the CoinMarketCap web api using either Id or Symbol (Id prefered)
 #' https://www.coingecko.com/en/api/documentation
@@ -71,9 +75,9 @@ get_coingecko_price <- function(id = NULL) {
 
   # id <- 'basic-attention-token'
   if (is.null(id)) stop("Error: a [character] `id` must be specified.")
-  n <- nrow(.map[Id == id])
-  if (n == 0) id <- get_coingecko_id(id)$Id
-
+  if (!get_coingecko_verify_id(id)) {
+    id <- get_coingecko_id_from_symbol(id)$Id
+  }
   if (length(id) != 1) {
     stop("Error: more than one possible match for given symbol:")
     print(id)
