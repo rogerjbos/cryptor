@@ -1,3 +1,7 @@
+# To update map!
+.map <<- fread("data-raw/gecko.csv")
+# usethis::use_data(.map, internal = TRUE, overwrite = TRUE)
+
 #' Mapping from CoinGecko id to crypto symbol
 #'
 #' @name get_coingecko_map
@@ -90,6 +94,3 @@ get_coingecko_price <- function(id = NULL) {
 
 }
 
-# To update map!
-# .map <<- fread("data-raw/gecko.csv")
-# usethis::use_data(.map, internal = TRUE, overwrite = TRUE)
