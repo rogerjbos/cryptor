@@ -13,6 +13,7 @@ Depends:
     digest,
     caTools,
     R (>= 2.10)
+Imports: data.table
 URL: https://github.com/rogerjbos/cryptor
 Copyright: (c) 2021
-RoxygenNote: 7.1.1
+RoxygenNote: 7.1.2
