@@ -8,7 +8,7 @@
 get_coingecko_map()
 }
 \value{
-data.table with mapping
+data.frame with mapping
 }
 \description{
 Mapping from CoinGecko id to crypto symbol

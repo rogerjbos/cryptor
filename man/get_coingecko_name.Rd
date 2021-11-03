@@ -8,10 +8,10 @@
 get_coingecko_name(txt)
 }
 \arguments{
-\item{txt}{string to seach for in the CoinGecko mapping table}
+\item{txt}{string to search for in the CoinGecko mapping table}
 }
 \value{
-data.table with all observations that match the input string
+data.frame with all observations that match the input string
 }
 \description{
 Function to return the crypto's matching the search criteria

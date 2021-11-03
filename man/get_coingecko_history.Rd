@@ -15,7 +15,7 @@ get_coingecko_history(id = NULL, cur = "usd", days = "max")
 \item{days}{integer (1/7/14/30/90/180/365) or string "max"}
 }
 \value{
-data.table of date, price, market_cap, volume, Id, and epoch (unix time)
+data.frame of date, price, market_cap, volume, Id, and epoch (unix time)
 }
 \description{
 Get historical data from the CoinGecko web api for a given Id (not Symbol)

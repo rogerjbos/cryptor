@@ -15,7 +15,7 @@ get_coingecko_ohlc(id = NULL, cur = "usd", days = "max")
 \item{days}{integer (1/7/14/30/90/180/365) or string "max"}
 }
 \value{
-data.table of date, open, high, low, close, Id, and epoch (unix time)
+data.frame of date, open, high, low, close, Id, and epoch (unix time)
 }
 \description{
 Get OHLC candle data from the CoinGecko web api for a given Id (not Symbol)
