@@ -74,7 +74,11 @@ get_coingecko_currencies <- function() {
 #'
 #' @author Roger J. Bos, CFA, \email{me@rogerjbos.com}
 #' @export
-get_coingecko_name <- function(txt) .map[grep(txt, .map$Name, ignore.case = TRUE)]
+get_coingecko_name <- function(txt) {
+
+  .map[grep(txt, .map$Name, ignore.case = TRUE), ]
+
+}
 
 #' Function to get CoinGecko id based on a crypto symbol
 #'
@@ -93,9 +97,17 @@ get_coingecko_name <- function(txt) .map[grep(txt, .map$Name, ignore.case = TRUE
 #'
 #' @author Roger J. Bos, CFA, \email{me@rogerjbos.com}
 #' @export
-get_coingecko_id_from_symbol <- function(tag) .map[.map$Symbol == tolower(tag)]
+get_coingecko_id_from_symbol <- function(tag) {
 
-get_coingecko_verify_id <- function(tag) nrow(.map[.map$Id == tolower(tag)])==1
+  .map[.map$Symbol == tolower(tag), ]
+
+}
+
+get_coingecko_verify_id <- function(tag) {
+
+  nrow(.map[.map$Id == tolower(tag)])==1
+
+}
 
 #' Get LATEST price from the CoinMarketCap web api for a given Id (not Symbol)
 #' https://www.coingecko.com/en/api/documentation
