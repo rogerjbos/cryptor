@@ -167,14 +167,20 @@ get_coingecko_ohlc <- function(id = NULL, cur = 'usd', days = "max") {
   if (is.null(id)) stop("Error: a [character] `id` must be specified.")
 
   url <- paste0("https://api.coingecko.com/api/v3/coins/", id, "/ohlc?vs_currency=", cur, "&days=" , days)
-  j <- jsonlite::read_json(url, simplifyVector = TRUE) %>%
-    as.data.frame()
+  j <- as.data.frame(jsonlite::read_json(url, simplifyVector = TRUE))
   names(j) <- c('epoch','open','high','low','close')
-  j$date <- lubridate::as_datetime(j$epoch / 1000)
+  j$date <- as.POSIXct(j$epoch / 1000, origin = "1970-01-01")
   j$Id <- id
   j[, c('date','open','high','low','close','Id','epoch')]
 
 }
+
+# tmp <- get_coingecko_ohlc("cardano", days = 30)
+# head(tmp)
+# library(xts)
+# xtmp <- xts(tmp[, c("open","high","low","close")], order.by = tmp$date, frequency = 4)
+# to.daily(xtmp)
+
 
 #' Get historical data from the CoinGecko web api for a given Id (not Symbol)
 #' https://www.coingecko.com/en/api/documentation
@@ -197,14 +203,13 @@ get_coingecko_ohlc <- function(id = NULL, cur = 'usd', days = "max") {
 #' @export
 get_coingecko_history <- function(id = NULL, cur = 'usd', days = "max") {
 
-  # id <- 'bitcoin'; cur = 'usd'; days = 30
+  # id <- 'bitcoin'; cur = 'usd'; days = "max"
   if (is.null(id)) stop("Error: a [character] `id` must be specified.")
 
   url <- paste0("https://api.coingecko.com/api/v3/coins/", id, "/market_chart?vs_currency=", cur, "&days=" , days, "&interval=daily")
-  j <- jsonlite::read_json(url, simplifyVector = TRUE) %>%
-    as.data.frame()
+  j <- as.data.frame(jsonlite::read_json(url, simplifyVector = TRUE))
   names(j) <- c('epoch','price','epoch2','market_cap','epoch3','volume')
-  j$date <- lubridate::as_datetime(j$epoch / 1000)
+  j$date <- as.POSIXct(j$epoch / 1000, origin = "1970-01-01")
   j$Id <-id
   j[, c('date','price','market_cap','volume','Id','epoch')]
 
@@ -237,8 +242,7 @@ get_coingecko_markets <- function(cur = 'usd', ord = 'market_cap_desc') {
   if (!ord %in% valid_ord) stop(paste("Error: ord must be one of:", paste0(valid_ord, collapse = ", ")))
 
   url <- paste0("https://api.coingecko.com/api/v3/coins/markets?vs_currency=", cur, "&order=", ord, "&per_page=100&page=1&sparkline=false&price_change_percentage=1h%2C24h%2C7d14d%2C30d%2C200d%2C1y")
-  j <- jsonlite::read_json(url, simplifyVector = TRUE) %>%
-    as.data.frame()
+  j <- as.data.frame(jsonlite::read_json(url, simplifyVector = TRUE))
   j
 }
 
