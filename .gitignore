@@ -2,3 +2,6 @@
 .Rhistory
 .RData
 .Ruserdata
+/R/coingecko_test.R
+/R/defensive_map.csv
+/R/defensive_price.csv

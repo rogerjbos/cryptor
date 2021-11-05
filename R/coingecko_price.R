@@ -296,7 +296,7 @@ get_coingecko_coins <- function(id = 'bitcoin') {
   mkt_data <- t(j$market_data)
   tickers_df <- j$tickers
 
-  list(out, mkt_data, tickers_df)
+  list(coins = out, market_data = mkt_data, tickers = tickers_df)
 
 }
 
@@ -359,6 +359,28 @@ get_coingecko_coin_categories <- function() {
 get_coingecko_defi <- function() {
   j <- jsonlite::read_json(path="https://api.coingecko.com/api/v3/global/decentralized_finance_defi", simplifyVector = TRUE)
   data.frame(j$data)
+}
+
+#' Get Top-7 trending coins on CoinGecko as searched by users in the last 24 hours (Ordered by most popular first) from the CoinGecko web api
+#' https://www.coingecko.com/en/api/documentation
+#'
+#' @name get_coingecko_trending
+#' @title get_coingecko_trending
+#' @encoding UTF-8
+#' @concept Get Top-7 trending coins on CoinGecko as searched by users in the last 24 hours (Ordered by most popular first) from the CoinGecko web api
+#' @param None
+#'
+#' @return data.frame of coin categories
+#'
+#' @examples
+#' tmp <- get_coingecko_trending()
+#'
+#' @author Roger J. Bos, \email{roger.bos@@gmail.com}
+#' @export
+get_coingecko_trending <- function() {
+  j <- jsonlite::read_json(path="https://api.coingecko.com/api/v3/search/trending", simplifyVector = TRUE)
+  names(j)
+  data.frame(j$coins)
 }
 
 #' Get cryptocurrency global data from the CoinGecko web api
