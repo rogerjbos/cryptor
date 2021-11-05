@@ -1,19 +1,21 @@
 Package: cryptor
 Type: Package
 Title: Request pricing and other data from Kraken and CoinMarketCap using their respective web api
-Version: 0.0.2
+Version: 0.0.3
 Author: Roger J. Bos, CFA
-Maintainer: Roger J. Bos, CFA <me@rogerjbos.com>
+Maintainer: Roger J. Bos, CFA <roger.bos@gmail.com>
 Description: Download crypto prices from CoinMarketCap using their web api.
     Also provides functions to look up symbols and ids for crypto's of interest.
 License: GPL-3
 Encoding: UTF-8
 LazyData: true
 Depends: 
-    data.table,
     digest,
     caTools,
     R (>= 2.10)
 URL: https://github.com/rogerjbos/cryptor
 Copyright: (c) 2021
-RoxygenNote: 7.1.1
+RoxygenNote: 7.1.2
+Suggests: 
+    testthat (>= 3.0.0)
+Config/testthat/edition: 3
