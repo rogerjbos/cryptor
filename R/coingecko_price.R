@@ -1,4 +1,6 @@
-
+#' @name get_coingecko_ping
+#' @author Roger J. Bos, \email{roger.bos@@gmail.com}
+#' @export
 .isnull <- function(x, y) {
   if (is.null(x)) return(y)
   if (x=="") return(y)
@@ -259,11 +261,11 @@ get_coingecko_markets <- function(cur = 'usd', ord = 'market_cap_desc') {
 #' @return data.table of market date
 #'
 #' @examples
-#' tmp <- get_coingecko_coins('bitcoin')
+#' tmp <- get_coingecko_coins('ovr')
 #'
 #' @author Roger J. Bos, \email{roger.bos@@gmail.com}
 #' @export
-get_coingecko_coins <- function(Id = 'bitcoin') {
+get_coingecko_coins <- function(Id = 'bitcoin', lang = 'en') {
 
   url <- paste0("https://api.coingecko.com/api/v3/coins/", Id,
     "?localization=false&tickers=true&market_data=true&community_data=true&developer_data=true&sparkline=false")
@@ -275,7 +277,7 @@ get_coingecko_coins <- function(Id = 'bitcoin') {
                     name = j$name,
                     block_time_in_minutes = j$block_time_in_minutes,
                     hashing_algorithm = .isnull(j$hashing_algorithm, "None"),
-                    categories = paste0(j$categories, collapse=","),
+                    categories = paste0(j$categories, collapse=", "),
                     description = j$description[lang],
                     country_origin = j$country_origin,
                     genesis_date = .isnull(j$genesis_date, "NA"),

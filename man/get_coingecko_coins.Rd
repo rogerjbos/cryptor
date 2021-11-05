@@ -5,7 +5,7 @@
 \alias{get_coingecko_coins}
 \title{get_coingecko_coins}
 \usage{
-get_coingecko_coins(id = "bitcoin")
+get_coingecko_coins(Id = "bitcoin", lang = "en")
 }
 \arguments{
 \item{cur}{string currency (defaults to 'usd') as listed in get_coingecko_currencies()}
@@ -20,7 +20,7 @@ Get coin specific data from the CoinGecko web api
 https://www.coingecko.com/en/api/documentation
 }
 \examples{
-tmp <- get_coingecko_coins('bitcoin')
+tmp <- get_coingecko_coins('ovr')
 
 }
 \author{

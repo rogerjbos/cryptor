@@ -3,8 +3,11 @@
 \encoding{UTF-8}
 \name{get_coingecko_ping}
 \alias{get_coingecko_ping}
+\alias{.isnull}
 \title{get_coingecko_ping}
 \usage{
+.isnull(x, y)
+
 get_coingecko_ping()
 }
 \arguments{
@@ -22,6 +25,8 @@ tmp <- get_coingecko_ping()
 
 }
 \author{
+Roger J. Bos, \email{roger.bos@gmail.com}
+
 Roger J. Bos, \email{roger.bos@gmail.com}
 }
 \concept{Get status from the CoinGecko web api}
