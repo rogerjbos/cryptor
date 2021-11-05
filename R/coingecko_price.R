@@ -175,13 +175,6 @@ get_coingecko_ohlc <- function(id = NULL, cur = 'usd', days = "max") {
 
 }
 
-# tmp <- get_coingecko_ohlc("cardano", days = 30)
-# head(tmp)
-# library(xts)
-# xtmp <- xts(tmp[, c("open","high","low","close")], order.by = tmp$date, frequency = 4)
-# to.daily(xtmp)
-
-
 #' Get historical data from the CoinGecko web api for a given Id (not Symbol)
 #' https://www.coingecko.com/en/api/documentation
 #'
@@ -425,5 +418,3 @@ get_coingecko_public_treasury <- function() {
   both
 
 }
-
-
