@@ -1,3 +1,10 @@
+
+.isnull <- function(x, y) {
+  if (is.null(x)) return(y)
+  if (x=="") return(y)
+  x
+}
+
 # To update map!
 if (!exists(".map")) .map <- read.csv("data-raw/gecko.csv")
 # usethis::use_data(.map, internal = TRUE, overwrite = TRUE)
@@ -256,42 +263,36 @@ get_coingecko_markets <- function(cur = 'usd', ord = 'market_cap_desc') {
 #'
 #' @author Roger J. Bos, \email{roger.bos@@gmail.com}
 #' @export
-get_coingecko_coins <- function(id = 'bitcoin') {
+get_coingecko_coins <- function(Id = 'bitcoin') {
 
-  localization = TRUE; tickers=TRUE; market_data=TRUE; community_data=TRUE; developer_data=TRUE
-  url <- paste0("https://api.coingecko.com/api/v3/coins/", id,
-    "?localization=", tolower(localization),
-    "&tickers=", tolower(tickers),
-    "&market_data=", tolower(market_data),
-    "&community_data=", tolower(community_data),
-    "&developer_data=", tolower(developer_data),
-    "&sparkline=false")
+  url <- paste0("https://api.coingecko.com/api/v3/coins/", Id,
+    "?localization=false&tickers=true&market_data=true&community_data=true&developer_data=true&sparkline=false")
 
   j <- jsonlite::read_json(url, simplifyVector = TRUE)
 
   out <- data.frame(id = j$id,
-    symbol = j$symbol,
-    name = j$name,
-    block_time_in_minutes = j$block_time_in_minutes,
-    hashing_algorithm = j$hashing_algorithm,
-    categories = j$categories,
-    description = j$description,
-    country_origin = j$country_origin,
-    genesis_date = j$genesis_date,
-    sentiment_votes_up_percentage = j$sentiment_votes_up_percentage,
-    sentiment_votes_down_percentage = j$sentiment_votes_down_percentage,
-    market_cap_rank = j$market_cap_rank,
-    coingecko_rank = j$coingecko_rank,
-    coingecko_score = j$coingecko_score,
-    developer_score = j$developer_score,
-    community_score = j$community_score,
-    liquidity_score = j$liquidity_score,
-    public_interest_score = j$public_interest_score,
-    t(j$links),
-    t(j$community_data),
-    t(j$developer_data),
-    t(j$public_interest_stats),
-    last_updated = j$last_updated)
+                    symbol = j$symbol,
+                    name = j$name,
+                    block_time_in_minutes = j$block_time_in_minutes,
+                    hashing_algorithm = .isnull(j$hashing_algorithm, "None"),
+                    categories = paste0(j$categories, collapse=","),
+                    description = j$description[lang],
+                    country_origin = j$country_origin,
+                    genesis_date = .isnull(j$genesis_date, "NA"),
+                    sentiment_votes_up_percentage = j$sentiment_votes_up_percentage,
+                    sentiment_votes_down_percentage = j$sentiment_votes_down_percentage,
+                    market_cap_rank = j$market_cap_rank,
+                    coingecko_rank = j$coingecko_rank,
+                    coingecko_score = j$coingecko_score,
+                    developer_score = j$developer_score,
+                    community_score = j$community_score,
+                    liquidity_score = j$liquidity_score,
+                    public_interest_score = j$public_interest_score,
+                    t(j$links),
+                    t(j$community_data),
+                    t(j$developer_data),
+                    t(j$public_interest_stats),
+                    last_updated = j$last_updated)
 
   mkt_data <- t(j$market_data)
   tickers_df <- j$tickers
